@@ -1,19 +1,17 @@
 package com.anyplayer.ellaplayer.ui;
 
 import android.app.ActionBar;
+import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -24,7 +22,7 @@ import com.anyplayer.ellaplayer.R;
 
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
     private static final String TAG = "MainActivity";
     private SurfaceView mSurface;
     private SurfaceHolder mHolder;
@@ -47,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        /*
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         View decorView = getWindow().getDecorView();
         decorView.setOnTouchListener(new View.OnTouchListener() {
@@ -58,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         getWindow().setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
+        */
         setContentView(R.layout.activity_main);
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "onCompletion: ");
                 isCompelled = true;
                 if (isLoop) {
-                    if (isPrepared == true || isPaused == true) {
+                    if (isPrepared || isPaused) {
                         if (mMediaPlayer != null) {
                             mMediaPlayer.start();
                             isPlaying = true;
@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
     public void play(View view) {
 
         Log.i(TAG, "play: isPrepared=" + isPrepared + "   | isPaused=" + isPaused);
-        if (isPrepared == true || isPaused == true) {
+        if (isPrepared || isPaused) {
             if (mMediaPlayer != null) {
                 mMediaPlayer.start();
                 int currentPosition = mMediaPlayer.getCurrentPosition();
@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onStartTrackingTouch(SeekBar seekBar) {
                         Log.i(TAG, "onStartTrackingTouch: ");
-                        if (isPlaying == true) {
+                        if (isPlaying) {
                             isStartTrackingTouch = true;
                             if (mMediaPlayer != null) {
                                 mMediaPlayer.pause();
@@ -245,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void pause(View view) {
         Log.i(TAG, "pause: isPlaying=" + isPlaying);
-        if (isPlaying == true) {
+        if (isPlaying) {
             if (mMediaPlayer != null) {
                 mMediaPlayer.pause();
                 isPaused = true;
@@ -332,5 +332,11 @@ public class MainActivity extends AppCompatActivity {
             mSurface.setLayoutParams(layoutParams);
             mButton.setText("窗口");
         }
+    }
+
+    public void ellaPlayer(View view) {
+        Intent intent = new Intent(this, EllaPlayer.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 }

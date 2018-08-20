@@ -9,11 +9,13 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.anyplayer.ellaplayer.ui.widget.MainActivity">
+    >
+
     <FrameLayout
         android:id="@+id/player_container"
         android:layout_width="match_parent"
         android:layout_height="250dp">
+
         <SurfaceView
             android:id="@+id/media_player_surfaceView"
             android:layout_width="match_parent"
@@ -21,38 +23,58 @@
             android:onClick="onClick"
             />
     </FrameLayout>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="ellaPlayer"
+        android:layout_below="@id/player_container"
+        android:text="Ella"
+        />
+
     <SeekBar
         android:id="@+id/seek_bar"
-        android:paddingTop="300dp"
         style="@android:style/Widget.ProgressBar.Horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:paddingTop="300dp"/>
+
     <LinearLayout
         android:id="@+id/button_three"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true">
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="播放"
-            android:onClick="play"/>
+            android:onClick="play"
+            android:text="播放"/>
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="停止"
-            android:onClick="pause"/>
+            android:onClick="pause"
+            android:text="停止"/>
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="退出"
-            android:onClick="stop"/>
+            android:onClick="stop"
+            android:text="退出"/>
+
         <Button
             android:id="@+id/text_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="窗口"
-            android:onClick="noFull"/>
+            android:onClick="noFull"
+            android:text="窗口"/>
+
+
     </LinearLayout>
+
 
 </RelativeLayout>

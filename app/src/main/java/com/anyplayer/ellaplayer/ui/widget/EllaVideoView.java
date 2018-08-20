@@ -16,8 +16,8 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.widget.MediaController;
 
+import com.anyplayer.ellaplayer.R;
 import com.anyplayer.ellaplayer.base.player.EllaPlayer;
 
 import java.util.Map;
@@ -58,19 +58,16 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
     private boolean mCanPause;
     private boolean mCanSeekBack;
     private boolean mCanSeekForward;
-    private MediaController mMediaController;
+    private EllaController mMediaController;
     private int mCurrentBufferPercentage;
 
     public EllaVideoView(Context context) {
         super(context);
+        init();
     }
 
-    public EllaVideoView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-    }
-
-    public EllaVideoView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
+    private void init() {
+        Log.i(TAG, "EllaVideoView init start.");
         mVideoHeight = 0;
         mVideoWidth = 0;
         getHolder().addCallback(new SurfaceHolder.Callback() {
@@ -82,6 +79,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
 
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                Log.i(TAG, "surfaceChanged: " + width + "/" + height);
                 mSurfaceWidth = width;
                 mSurfaceHeight = height;
                 boolean isValidState = (mTargetState == STATE_PLAYING);
@@ -111,6 +109,16 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
         mTargetState = STATE_IDLE;
     }
 
+    public EllaVideoView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public EllaVideoView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init();
+    }
+
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
@@ -132,7 +140,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
     }
 
     private void toggleMediaControllerVisibility() {
-        if (mMediaController != null && mMediaController.isShowing()) {
+        if (mMediaController.isShowing()) {
             mMediaController.hide();
         } else {
             mMediaController.show();
@@ -180,6 +188,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         Log.i(TAG, "onMeasure(" + MeasureSpec.toString(widthMeasureSpec) + "," + MeasureSpec.toString(heightMeasureSpec));
+        Log.i(TAG, "onMeasure:mVideoWidth=" + mVideoWidth + ",mVideoHeight=" + mVideoHeight);
         //能够获得的尺寸
         int height = getDefaultSize(mVideoHeight, heightMeasureSpec);
         int width = getDefaultSize(mVideoWidth, widthMeasureSpec);
@@ -312,8 +321,9 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
     private void attachMediaController() {
         if (mMediaPlayer != null && mMediaController != null) {
             //这里设置的是MediaPlayerController
-            //TODO 设置回调
-            //mMediaController.setMediaPlayer(this);
+
+            //将player传递给control
+            mMediaController.setPlayer(this);
             View anchorView = this.getParent() instanceof View ?
                     (View) this.getParent() : this;
             mMediaController.setAnchorView(anchorView);
@@ -372,6 +382,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
 
             mVideoHeight = mp.getVideoHeight();
             mVideoWidth = mp.getVideoWidth();
+
             //mSeekWhenPrepared may be changed when seekTo() called
             int seekToPosition = mSeekWhenPrepared;
             if (seekToPosition != 0) {
@@ -379,6 +390,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
             }
             if (mVideoWidth > 0 && mVideoHeight > 0) {
                 Log.i(TAG, "videoSize:" + mVideoWidth + "/" + mVideoHeight);
+                Log.i(TAG, "surfaceSize:" + mSurfaceWidth + "/" + mSurfaceHeight);
                 getHolder().setFixedSize(mVideoWidth, mVideoHeight);
                 if (mSurfaceWidth == mVideoWidth && mSurfaceHeight == mVideoHeight) {
                     //we didn't actually change the size(总是我们需要的),so we won't get a
@@ -408,12 +420,12 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
     private MediaPlayer.OnVideoSizeChangedListener mSizeChangeListener = new MediaPlayer.OnVideoSizeChangedListener() {
         @Override
         public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
+            Log.i(TAG, "onVideoSizeChanged:" + width + "/" + height);
             mVideoHeight = height;
             mVideoWidth = width;
             if (mVideoWidth > 0 && mVideoHeight > 0) {
-                //TODO 改变SurfaceView的大小
                 getHolder().setFixedSize(mVideoWidth, mVideoHeight);
-                requestLayout();
+                requestLayout();//onMeasure()方法被调用
             }
         }
     };
@@ -455,13 +467,13 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
                 Resources resources = getContext().getResources();
                 int messageId;
                 if (what == MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK) {
-                    messageId = com.android.internal.R.string.VideoView_error_text_invalid_progressive_playback;
+                    messageId = R.string.VideoView_error_text_invalid_progressive_playback;
                 } else {
-                    messageId = com.android.internal.R.string.VideoView_error_text_unknown;
+                    messageId = R.string.VideoView_error_text_unknown;
                 }
                 new AlertDialog.Builder(getContext())
                         .setMessage(messageId)
-                        .setPositiveButton(com.android.internal.R.string.VideoView_error_button, new DialogInterface.OnClickListener() {
+                        .setPositiveButton(R.string.VideoView_error_button, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 //if we get here ,there is no Error listener,so at
@@ -595,7 +607,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
         }
     }
 
-    public void setMediaController(MediaController mediaController) {
+    public void setMediaController(EllaController mediaController) {
         if (mMediaController != null) {
             mMediaController.hide();
         }

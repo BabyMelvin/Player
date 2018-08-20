@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EllaPlayer</string>
+
+    <!-- Title for error alert when a video cannot be played.  it can be used by any app. -->
+    <string name="VideoView_error_title">Video problem</string>
+    <!-- Text for error alert when a video container is not valid for progressive download/playback. -->
+    <string name="VideoView_error_text_invalid_progressive_playback">This video isn\'t valid for streaming to this device.</string>
+    <!-- Text for error alert when a video cannot be played. it can be used by any app. -->
+    <string name="VideoView_error_text_unknown">Can\'t play this video.</string>
+    <!-- Button to close error alert when a video cannot be played -->
+    <string name="VideoView_error_button">OK</string>
+
+    <!-- On the keyguard screen, it shows the carrier the phone is connected to.  This is displayed if the phone is not connected to a carrier.-->
+    <string name="lockscreen_carrier_default">No service</string>
+
+    <!-- Shown in the lock screen to tell the user that the screen is locked. -->
+    <string name="lockscreen_screen_locked">Screen locked.</string>
+
+    <!-- when pattern lock is enabled, tell them about the emergency dial -->
+    <string name="lockscreen_instructions_when_pattern_enabled">Press Menu to unlock or place emergency call.</string>
+
+    <!-- On the keyguard screen, when pattern lock is disabled, only tell them to press menu to unlock.  This is shown in small font at the bottom. -->
+    <string name="lockscreen_instructions_when_pattern_disabled">Press Menu to unlock.</string>
+
+    <!-- On the unlock pattern screen, shown at the top of the unlock screen to tell the user what to do. Below this text is the place for theu ser to draw the pattern. -->
+    <string name="lockscreen_pattern_instructions">Draw pattern to unlock</string>
+
+    <!-- Shown on transport control of lockscreen. Pressing button goes to previous track. -->
+    <string name="lockscreen_transport_prev_description">Previous track</string>
+    <!-- Shown on transport control of lockscreen. Pressing button goes to next track. -->
+    <string name="lockscreen_transport_next_description">Next track</string>
+    <!-- Shown on transport control of lockscreen. Pressing button pauses playback -->
+    <string name="lockscreen_transport_pause_description">Pause</string>
+    <!-- Shown on transport control of lockscreen. Pressing button pauses playback -->
+    <string name="lockscreen_transport_play_description">Play</string>
+    <!-- Shown on transport control of lockscreen. Pressing button pauses playback -->
+    <string name="lockscreen_transport_stop_description">Stop</string>
+    <!-- Shown on transport control screens. Pressing button rewinds playback [CHAR LIMIT=NONE]-->
+    <string name="lockscreen_transport_rew_description">Rewind</string>
+    <!-- Shown on transport control screens. Pressing button fast forwards playback [CHAR LIMIT=NONE]-->
+    <string name="lockscreen_transport_ffw_description">Fast forward</string>
+</resources>

@@ -17,6 +17,8 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.anyplayer.ellaplayer.R;
+
 import java.util.Formatter;
 import java.util.Locale;
 
@@ -58,21 +60,28 @@ public class EllaController extends FrameLayout {
 
     public EllaController(@NonNull Context context) {
         this(context, true);
+        init(context);
     }
 
-    public EllaController(Context context, boolean useFastForward) {
-        super(context);
+    private void init(Context context) {
         mContext = context;
         mUseFastForward = true;
+        mFromXml = true;
+        //TODO AccessibilityManager
         initFloatingWindowLayout();
         initFloatingWindow();
         //todo accessibilityManager
     }
 
+    public EllaController(Context context, boolean useFastForward) {
+        super(context);
+        init(context);
+    }
+
     private void initFloatingWindow() {
         mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
         assert mWindowManager != null;
-        mWindowManager.addView(mRoot, mRootLayoutParams);
+        //mWindowManager.addView(mRoot, mRootLayoutParams);
         setFocusable(true);
         setFocusableInTouchMode(true);
         setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
@@ -111,12 +120,13 @@ public class EllaController extends FrameLayout {
         mAnchor = view;
         if (mAnchor != null) {
             mAnchor.addOnLayoutChangeListener(mLayoutChangeListener);
+            //TODO,避免一个view对应多个 parent
+            ((ViewGroup) mAnchor.getParent()).removeAllViews();
         }
         LayoutParams layoutParams = new LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
         );
-        removeAllViews();
         View v = makeControllerView();
         addView(v, layoutParams);
     }
@@ -124,29 +134,30 @@ public class EllaController extends FrameLayout {
     protected View makeControllerView() {
         LayoutInflater LayoutInflater = (android.view.LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         assert LayoutInflater != null;
-        mRoot = LayoutInflater.inflate(com.android.internal.R.layout.media_controller, null);
+        mRoot = LayoutInflater.inflate(R.layout.media_controller, null);
+//TODO 问题        mWindowManager.addView(mRoot, mRootLayoutParams);
         initControllerView(mRoot);
         return mRoot;
     }
 
     private void initControllerView(View root) {
         Resources resources = mContext.getResources();
-        mPlayDescription = resources.getText(com.android.internal.R.string.lockscreen_transport_play_description);
-        mPauseDescription = resources.getText(com.android.internal.R.string.lockscreen_transport_pause_description);
-        mPauseButton = (ImageButton) root.findViewById(com.android.internal.R.id.pause);
+        mPlayDescription = resources.getText(R.string.lockscreen_transport_play_description);
+        mPauseDescription = resources.getText(R.string.lockscreen_transport_pause_description);
+        mPauseButton = (ImageButton) root.findViewById(R.id.pause);
         if (mPauseButton != null) {
             mPauseButton.requestFocus();
             mPauseButton.setOnClickListener(mPauseListener);
         }
 
-        mFfwdButton = (ImageButton) root.findViewById(com.android.internal.R.id.ffwd);
+        mFfwdButton = (ImageButton) root.findViewById(R.id.ffwd);
         if (mFfwdButton != null) {
             mFfwdButton.setOnClickListener(mFfwdListener);
             if (!mFromXml) {
                 mFfwdButton.setVisibility(mUseFastForward ? View.VISIBLE : View.INVISIBLE);
             }
         }
-        mRewButton = (ImageButton) root.findViewById(com.android.internal.R.id.rew);
+        mRewButton = (ImageButton) root.findViewById(R.id.rew);
         if (mRewButton != null) {
             mRewButton.setOnClickListener(mRewListener);
             if (!mFromXml) {
@@ -154,21 +165,21 @@ public class EllaController extends FrameLayout {
             }
         }
         //by default these are hidden,they will be enabled when setPrevNextListener() is called
-        mNextButton = (ImageButton) root.findViewById(com.android.internal.R.id.next);
+        mNextButton = (ImageButton) root.findViewById(R.id.next);
         if (mNextButton != null && !mFromXml && !mListenerSet) {
             mNextButton.setVisibility(View.GONE);
         }
-        mPrevButton = (ImageButton) root.findViewById(com.android.internal.R.id.prev);
+        mPrevButton = (ImageButton) root.findViewById(R.id.prev);
         if (mPrevButton != null && !mFromXml && !mListenerSet) {
             mPrevButton.setVisibility(View.GONE);
         }
-        mProgress = (SeekBar) root.findViewById(com.android.internal.R.id.mediacontroller_progress);
+        mProgress = (SeekBar) root.findViewById(R.id.mediacontroller_progress);
         if (mProgress != null) {
             mProgress.setOnSeekBarChangeListener(mSeekListener);
             mProgress.setMax(10000);
         }
-        mEndTime = (TextView) root.findViewById(com.android.internal.R.id.time);
-        mCurrentTime = (TextView) root.findViewById(com.android.internal.R.id.time_current);
+        mEndTime = (TextView) root.findViewById(R.id.time);
+        mCurrentTime = (TextView) root.findViewById(R.id.time_current);
         mFormatBuilder = new StringBuilder();
         mFormatter = new Formatter(mFormatBuilder, Locale.getDefault());
         installPrevNextListener();
@@ -203,7 +214,17 @@ public class EllaController extends FrameLayout {
     private SeekBar.OnSeekBarChangeListener mSeekListener = new SeekBar.OnSeekBarChangeListener() {
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (!fromUser) {
+                // We're not interested in programmatically generated changes to
+                // the progress bar's position.
+                return;
+            }
 
+            long duration = mPlayer.getDuration();
+            long newPosition = (duration * progress) / 1000L;
+            mPlayer.seekTo((int) newPosition);
+            if (mCurrentTime != null)
+                mCurrentTime.setText(stringForTime((int) newPosition));
         }
 
         @Override
@@ -284,15 +305,13 @@ public class EllaController extends FrameLayout {
 
     public EllaController(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        mRoot = this;
-        mContext = context;
-        mUseFastForward = true;
-        mFromXml = true;
-        //TODO AccessibilityManager
+        init(context);
+
     }
 
     public EllaController(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init(context);
     }
 
     @Override
@@ -325,6 +344,14 @@ public class EllaController extends FrameLayout {
         }
     }
 
+    public boolean isShowing() {
+        return mShowing;
+    }
+
+    public void show() {
+        show(mDefaultTimeout);
+    }
+
     /**
      * 显示controller，在timeout后消失
      *
@@ -338,13 +365,14 @@ public class EllaController extends FrameLayout {
             }
             disableUnsupportedButton();
             updateFlattingWindowLayout();
-            mWindowManager.addView(this, mRootLayoutParams);
+            //mWindowManager.addView(mRoot, mRootLayoutParams);
             mShowing = true;
         }
         updatePausePlay();
         //cause the progress bar to be updated even if mShowing
         //was already true.this happen ,for example,if we're
         //paused with the progress bar showing the user hits play
+
         //TODO post调用
         post(mShowingProgress);
 
@@ -377,10 +405,10 @@ public class EllaController extends FrameLayout {
             return;
         }
         if (mPlayer.isPlaying()) {
-            mPauseButton.setImageResource(com.android.internal.R.drawable.ic_media_pause);
+            mPauseButton.setImageResource(R.drawable.ic_media_pause);
             mPauseButton.setContentDescription(mPauseDescription);
         } else {
-            mPauseButton.setImageResource(com.android.internal.R.drawable.ic_media_play);
+            mPauseButton.setImageResource(R.drawable.ic_media_play);
             mPauseButton.setContentDescription(mPlayDescription);
         }
     }
@@ -455,6 +483,11 @@ public class EllaController extends FrameLayout {
         } else {
             return mFormatter.format("%02d:%02d", minutes, seconds).toString();
         }
+    }
+
+    public void setPlayer(EllaPlayerControl player) {
+        mPlayer = player;
+        updatePausePlay();
     }
 
     public void setPlayerController(EllaPlayerControl playerController) {
