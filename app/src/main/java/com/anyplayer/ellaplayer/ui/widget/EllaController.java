@@ -278,6 +278,7 @@ public class EllaController extends FrameLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        Log.i(TAG, "onTouchEvent: ");
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 //show until hide is called
@@ -318,12 +319,14 @@ public class EllaController extends FrameLayout {
      * @param timeout
      */
     public void show(int timeout) {
+        Log.i(TAG, "show: ");
         if (!mShowing) {
             setProcess();
             if (mPauseButton != null) {
                 mPauseButton.requestFocus();
             }
             disableUnsupportedButton();
+            mWindowManager.addView(mRoot, mRootLayoutParams);
             mShowing = true;
         }
         updatePausePlay();
@@ -439,14 +442,14 @@ public class EllaController extends FrameLayout {
     public void setPlayerView(EllaVideoView ellaVideoView) {
         Log.i(TAG, "setPlayerView: videoView:" + ellaVideoView.getHeight());
         mVideoView = ellaVideoView;
+        ellaVideoView.addOnLayoutChangeListener(new OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                mRootLayoutParams.y = v.getHeight();
+            }
+        });
         makeControllerView();
         mRootLayoutParams.y = ellaVideoView.getHeight();
-        mWindowManager.addView(mRoot, mRootLayoutParams);
-    }
-
-    public void updateControl(int width, int height) {
-        mRootLayoutParams.y = height;
-        mWindowManager.updateViewLayout(mRoot, mRootLayoutParams);
     }
 
     public interface EllaPlayerControl {

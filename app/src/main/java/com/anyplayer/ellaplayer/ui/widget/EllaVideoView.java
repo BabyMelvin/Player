@@ -87,9 +87,6 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
                 Log.i(TAG, "surfaceChanged: " + width + "/" + height);
                 mSurfaceWidth = width;
                 mSurfaceHeight = height;
-                if (mMediaController != null) {
-                    mMediaController.updateControl(mSurfaceWidth, mSurfaceHeight);
-                }
                 boolean isValidState = (mTargetState == STATE_PLAYING);
                 boolean hasValidSate = (mVideoHeight == mSurfaceHeight && mVideoWidth == mSurfaceWidth);
                 if (mMediaPlayer != null && isValidState && hasValidSate) {
@@ -143,6 +140,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        Log.i(TAG, "onTouchEvent: " + event);
         if (event.getAction() == MotionEvent.ACTION_DOWN && isInPlaybackState() && mMediaController != null) {
             toggleMediaControllerVisibility();
         }
@@ -150,6 +148,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
     }
 
     private void toggleMediaControllerVisibility() {
+        Log.i(TAG, "toggleMediaControllerVisibility: " + mMediaController.isShowing());
         if (mMediaController.isShowing()) {
             mMediaController.hide();
         } else {

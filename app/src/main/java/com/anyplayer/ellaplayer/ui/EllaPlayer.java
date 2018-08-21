@@ -23,7 +23,6 @@ public class EllaPlayer extends Activity {
 
 
     private void initView() {
-
         mEllaPlayer = (EllaVideoView) findViewById(R.id.video_view);
         mEllaPlayer.setVideoURI(Uri.parse("https://media.w3.org/2010/05/sintel/trailer.mp4"));
         EllaController ellaController = new EllaController(this);
