@@ -63,8 +63,8 @@ public class MainActivity extends Activity {
         if (actionBar != null) {
             actionBar.hide();
         }
-        initView();
-        initPlayer();
+        //initView();
+        //initPlayer();
     }
 
     private void initPlayer() {

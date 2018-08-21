@@ -15,7 +15,6 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 
 import com.anyplayer.ellaplayer.R;
 import com.anyplayer.ellaplayer.base.player.EllaPlayer;
@@ -70,10 +69,16 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
         Log.i(TAG, "EllaVideoView init start.");
         mVideoHeight = 0;
         mVideoWidth = 0;
+        //TODO 这里不能使用mSurfaceHolder，这个时候surface还没建立完成，使用的时候会出现 surface has been released
+        //mSurfaceHolder = getHolder();
+        //Log.i(TAG, "init: " + mSurfaceHolder);
         getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
+                Log.i(TAG, "surfaceCreated: " + holder);
                 mSurfaceHolder = holder;
+                //EllaController ellaController = new EllaController(getContext());
+                //setMediaController(ellaController);
                 openVideo();
             }
 
@@ -82,6 +87,9 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
                 Log.i(TAG, "surfaceChanged: " + width + "/" + height);
                 mSurfaceWidth = width;
                 mSurfaceHeight = height;
+                if (mMediaController != null) {
+                    mMediaController.updateControl(mSurfaceWidth, mSurfaceHeight);
+                }
                 boolean isValidState = (mTargetState == STATE_PLAYING);
                 boolean hasValidSate = (mVideoHeight == mSurfaceHeight && mVideoWidth == mSurfaceWidth);
                 if (mMediaPlayer != null && isValidState && hasValidSate) {
@@ -94,6 +102,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
+                Log.i(TAG, "surfaceDestroyed: " + holder);
                 //after we return from this we can't use the surface any more
                 mSurfaceHolder = null;
                 if (mMediaController != null)
@@ -101,6 +110,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
                 release(true);
             }
         });
+        //这里不能使用mSurfaceHolder变量，因为这里没有完成surfaceCreated回调
         getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         setFocusable(true);
         setFocusableInTouchMode(true);
@@ -278,7 +288,6 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
             //not ready for playback just yet,will try again later
             return;
         }
-
         //we shouldn't clear the target state,because somebody might have called start() previously
         release(false);
 
@@ -324,9 +333,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
 
             //将player传递给control
             mMediaController.setPlayer(this);
-            View anchorView = this.getParent() instanceof View ?
-                    (View) this.getParent() : this;
-            mMediaController.setAnchorView(anchorView);
+            mMediaController.setPlayerView(this);
             mMediaController.setEnabled(isInPlaybackState());
         }
     }
@@ -432,6 +439,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
     private MediaPlayer.OnCompletionListener mCompletionListener = new MediaPlayer.OnCompletionListener() {
         @Override
         public void onCompletion(MediaPlayer mp) {
+            Log.i(TAG, "onCompletion: ");
             mCurrentState = STATE_PLAYBACK_COMPLETED;
             mTargetState = STATE_PLAYBACK_COMPLETED;
             if (mMediaController != null) {
@@ -492,6 +500,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
     private MediaPlayer.OnBufferingUpdateListener mBufferingUpdateListener = new MediaPlayer.OnBufferingUpdateListener() {
         @Override
         public void onBufferingUpdate(MediaPlayer mp, int percent) {
+            Log.i(TAG, "onBufferingUpdate: ");
             //回调给UI（MediaController）
             mCurrentBufferPercentage = percent;
         }
@@ -587,8 +596,7 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
         mUri = uri;
         mHeaders = headers;
         mSeekWhenPrepared = 0;
-        //TODO 这里主动播放？  不播放会怎样，需测试
-        openVideo();
+        //openVideo();
         requestLayout();
         invalidate();
     }
@@ -608,10 +616,12 @@ public class EllaVideoView extends SurfaceView implements EllaController.EllaPla
     }
 
     public void setMediaController(EllaController mediaController) {
+        Log.i(TAG, "setMediaController: ");
         if (mMediaController != null) {
             mMediaController.hide();
         }
         mMediaController = mediaController;
-        attachMediaController();
+        //TODO 移除，在create 的时候再添加
+        //attachMediaController();
     }
 }

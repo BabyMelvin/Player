@@ -21,11 +21,35 @@ public class EllaPlayer extends Activity {
         initView();
     }
 
+
     private void initView() {
+
         mEllaPlayer = (EllaVideoView) findViewById(R.id.video_view);
+        mEllaPlayer.setVideoURI(Uri.parse("https://media.w3.org/2010/05/sintel/trailer.mp4"));
         EllaController ellaController = new EllaController(this);
         mEllaPlayer.setMediaController(ellaController);
-        mEllaPlayer.setVideoURI(Uri.parse("http://192.168.61.112/cuc_ieschool.mkv"));
-        //mEllaPlayer.setVideoURI(Uri.parse("https://media.w3.org/2010/05/sintel/trailer.mp4"));
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mEllaPlayer.start();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 }
