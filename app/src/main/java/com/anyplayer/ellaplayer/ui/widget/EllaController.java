@@ -6,11 +6,13 @@ import android.graphics.PixelFormat;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -30,6 +32,7 @@ import java.util.Locale;
  * Date: 2018/8/16.                 
  **********************************/
 public class EllaController extends FrameLayout {
+    private static final String TAG = "EllaController";
     private boolean mFromXml;
     private boolean mUseFastForward;
     private Context mContext;
@@ -57,6 +60,9 @@ public class EllaController extends FrameLayout {
     private Formatter mFormatter;
     public OnClickListener mNextListener;
     public OnClickListener mPrevListener;
+    private Window mWindow;
+    private View mDecorView;
+    private EllaVideoView mVideoView;
 
     public EllaController(@NonNull Context context) {
         this(context, true);
@@ -67,10 +73,8 @@ public class EllaController extends FrameLayout {
         mContext = context;
         mUseFastForward = true;
         mFromXml = true;
-        //TODO AccessibilityManager
-        initFloatingWindowLayout();
         initFloatingWindow();
-        //todo accessibilityManager
+        initFloatingWindowLayout();
     }
 
     public EllaController(Context context, boolean useFastForward) {
@@ -80,11 +84,8 @@ public class EllaController extends FrameLayout {
 
     private void initFloatingWindow() {
         mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
-        assert mWindowManager != null;
-        //mWindowManager.addView(mRoot, mRootLayoutParams);
         setFocusable(true);
         setFocusableInTouchMode(true);
-        setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
         requestFocus();
     }
 
@@ -107,26 +108,24 @@ public class EllaController extends FrameLayout {
     };
 
     /**
-     * 设置这个感觉像是view就是control view.
+     * 这是固定的view(anchor view)
      * 可以使用videoView或者activity的主view
      * 当使用videoView的时候要用parentView
      *
      * @param view Activity's mainView or videoView's parentView
      */
     public void setAnchorView(View view) {
+        Log.i(TAG, "setAnchorView: ");
         if (mAnchor != null) {
             mAnchor.removeOnLayoutChangeListener(mLayoutChangeListener);
         }
         mAnchor = view;
         if (mAnchor != null) {
             mAnchor.addOnLayoutChangeListener(mLayoutChangeListener);
-            //TODO,避免一个view对应多个 parent
-            ((ViewGroup) mAnchor.getParent()).removeAllViews();
         }
-        LayoutParams layoutParams = new LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-        );
+        LayoutParams layoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        layoutParams.gravity = Gravity.TOP | Gravity.LEFT;
+        layoutParams.width = view.getWidth();
         View v = makeControllerView();
         addView(v, layoutParams);
     }
@@ -134,8 +133,7 @@ public class EllaController extends FrameLayout {
     protected View makeControllerView() {
         LayoutInflater LayoutInflater = (android.view.LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         assert LayoutInflater != null;
-        mRoot = LayoutInflater.inflate(R.layout.media_controller, null);
-//TODO 问题        mWindowManager.addView(mRoot, mRootLayoutParams);
+        mRoot = LayoutInflater.inflate(R.layout.media_controller, this);
         initControllerView(mRoot);
         return mRoot;
     }
@@ -314,6 +312,7 @@ public class EllaController extends FrameLayout {
         init(context);
     }
 
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
@@ -335,8 +334,7 @@ public class EllaController extends FrameLayout {
     }
 
     public void hide() {
-        if (mAnchor == null)
-            return;
+
         if (mShowing) {
             removeCallbacks(mShowingProgress);
             mWindowManager.removeView(mRoot);
@@ -358,14 +356,13 @@ public class EllaController extends FrameLayout {
      * @param timeout
      */
     public void show(int timeout) {
-        if (!mShowing && mAnchor != null) {
+        if (!mShowing) {
             setProcess();
             if (mPauseButton != null) {
                 mPauseButton.requestFocus();
             }
             disableUnsupportedButton();
-            updateFlattingWindowLayout();
-            //mWindowManager.addView(mRoot, mRootLayoutParams);
+            mWindowManager.addView(mRoot, mRootLayoutParams);
             mShowing = true;
         }
         updatePausePlay();
@@ -423,8 +420,8 @@ public class EllaController extends FrameLayout {
         mAnchor.getLocationOnScreen(anchorPos);
         //we need to know the size of the controller so we can properly position it within its space
         measure(MeasureSpec.makeMeasureSpec(mAnchor.getWidth(), MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(mAnchor.getHeight(), MeasureSpec.AT_MOST));
-        WindowManager.LayoutParams p = mRootLayoutParams;
 
+        WindowManager.LayoutParams p = mRootLayoutParams;
         p.width = mAnchor.getWidth();
         p.x = anchorPos[0] + (mAnchor.getWidth() - p.width) / 2;
         p.y = anchorPos[1] + mAnchor.getHeight() - mRoot.getMeasuredHeight();
@@ -493,6 +490,19 @@ public class EllaController extends FrameLayout {
     public void setPlayerController(EllaPlayerControl playerController) {
         mPlayer = playerController;
         updatePausePlay();
+    }
+
+    public void setPlayerView(EllaVideoView ellaVideoView) {
+        Log.i(TAG, "setPlayerView: videoView:" + ellaVideoView.getHeight());
+        mVideoView = ellaVideoView;
+        View v = makeControllerView();
+        mRootLayoutParams.y = ellaVideoView.getHeight();
+        mWindowManager.addView(v, mRootLayoutParams);
+    }
+
+    public void updateControl(int width, int height) {
+        mRootLayoutParams.y = height;
+        mWindowManager.updateViewLayout(mRoot, mRootLayoutParams);
     }
 
     public interface EllaPlayerControl {
