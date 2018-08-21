@@ -12,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -39,7 +38,6 @@ public class EllaController extends FrameLayout {
     private View mRoot;
     private boolean mShowing = false;
 
-    private View mAnchor;
     //设置消失的时间
     public int mDefaultTimeout = 3000;
     private ImageButton mPauseButton;
@@ -60,8 +58,6 @@ public class EllaController extends FrameLayout {
     private Formatter mFormatter;
     public OnClickListener mNextListener;
     public OnClickListener mPrevListener;
-    private Window mWindow;
-    private View mDecorView;
     private EllaVideoView mVideoView;
 
     public EllaController(@NonNull Context context) {
@@ -95,39 +91,6 @@ public class EllaController extends FrameLayout {
         if (mRoot != null) {
             initControllerView(mRoot);
         }
-    }
-
-    private OnLayoutChangeListener mLayoutChangeListener = new OnLayoutChangeListener() {
-        @Override
-        public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-            updateFlattingWindowLayout();
-            if (mShowing) {
-                mWindowManager.updateViewLayout(mRoot, mRootLayoutParams);
-            }
-        }
-    };
-
-    /**
-     * 这是固定的view(anchor view)
-     * 可以使用videoView或者activity的主view
-     * 当使用videoView的时候要用parentView
-     *
-     * @param view Activity's mainView or videoView's parentView
-     */
-    public void setAnchorView(View view) {
-        Log.i(TAG, "setAnchorView: ");
-        if (mAnchor != null) {
-            mAnchor.removeOnLayoutChangeListener(mLayoutChangeListener);
-        }
-        mAnchor = view;
-        if (mAnchor != null) {
-            mAnchor.addOnLayoutChangeListener(mLayoutChangeListener);
-        }
-        LayoutParams layoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        layoutParams.gravity = Gravity.TOP | Gravity.LEFT;
-        layoutParams.width = view.getWidth();
-        View v = makeControllerView();
-        addView(v, layoutParams);
     }
 
     protected View makeControllerView() {
@@ -334,7 +297,6 @@ public class EllaController extends FrameLayout {
     }
 
     public void hide() {
-
         if (mShowing) {
             removeCallbacks(mShowingProgress);
             mWindowManager.removeView(mRoot);
@@ -362,7 +324,6 @@ public class EllaController extends FrameLayout {
                 mPauseButton.requestFocus();
             }
             disableUnsupportedButton();
-            mWindowManager.addView(mRoot, mRootLayoutParams);
             mShowing = true;
         }
         updatePausePlay();
@@ -408,23 +369,6 @@ public class EllaController extends FrameLayout {
             mPauseButton.setImageResource(R.drawable.ic_media_play);
             mPauseButton.setContentDescription(mPlayDescription);
         }
-    }
-
-    /**
-     * update the dynamic parts of mRootLayoutParams
-     * must be called with mAnchor !=NULL
-     */
-    private void updateFlattingWindowLayout() {
-        int[] anchorPos = new int[2];
-        //获取屏幕的位置
-        mAnchor.getLocationOnScreen(anchorPos);
-        //we need to know the size of the controller so we can properly position it within its space
-        measure(MeasureSpec.makeMeasureSpec(mAnchor.getWidth(), MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(mAnchor.getHeight(), MeasureSpec.AT_MOST));
-
-        WindowManager.LayoutParams p = mRootLayoutParams;
-        p.width = mAnchor.getWidth();
-        p.x = anchorPos[0] + (mAnchor.getWidth() - p.width) / 2;
-        p.y = anchorPos[1] + mAnchor.getHeight() - mRoot.getMeasuredHeight();
     }
 
     private void disableUnsupportedButton() {
@@ -495,9 +439,9 @@ public class EllaController extends FrameLayout {
     public void setPlayerView(EllaVideoView ellaVideoView) {
         Log.i(TAG, "setPlayerView: videoView:" + ellaVideoView.getHeight());
         mVideoView = ellaVideoView;
-        View v = makeControllerView();
+        makeControllerView();
         mRootLayoutParams.y = ellaVideoView.getHeight();
-        mWindowManager.addView(v, mRootLayoutParams);
+        mWindowManager.addView(mRoot, mRootLayoutParams);
     }
 
     public void updateControl(int width, int height) {
